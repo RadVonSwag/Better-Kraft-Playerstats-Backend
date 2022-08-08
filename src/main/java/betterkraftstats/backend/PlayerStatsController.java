@@ -18,6 +18,7 @@ public class PlayerStatsController {
     
     @GetMapping("/playtime")
     public void getPlaytime() {
-        playerService.associateUserName();
+        //playerService.associateUserName();
+        playerService.getTimePlayed();
     }
 }

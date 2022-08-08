@@ -20,14 +20,15 @@ public class PlayerService {
     @Value("${directory.file.usercache}")
     String usercache_dir;
 
-    @Value("${directory.stats")
+    @Value("${directory.stats}")
     String stats_dir;
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public void associateUserName() {
         log.info("usercache location: " + usercache_dir);
         log.info("stats location: " + usercache_dir);
 
-        ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode players_array = mapper.readTree(new File(usercache_dir));
             System.out.println(players_array.toString());
@@ -37,7 +38,22 @@ public class PlayerService {
     }
 
     public Map<String, Integer> getTimePlayed() {
-        Map<String, Integer> uuid_and_time = new HashMap<String, Integer>();
-        return null;
+        Map<String, Integer> uuidAndTime = new HashMap<String, Integer>();
+
+        File[] statsFiles = new File(stats_dir).listFiles();
+        for (int i = 0; i < statsFiles.length; i++) {
+            File currentFile = statsFiles[i];
+            try {
+                JsonNode currentPlayer = mapper.readTree(currentFile);
+                String timePlayedAsString = currentPlayer.get("stats").get("minecraft:custom").get("minecraft:play_one_minute")
+                        .toString();
+                int timePlayed = Integer.parseInt(timePlayedAsString) / 72000;
+                String uuid = currentFile.getName().substring(0, 35);
+                uuidAndTime.put(uuid, timePlayed);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return uuidAndTime;
     }
 }
