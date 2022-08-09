@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.json.JsonWriteFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -24,21 +25,11 @@ public class PlayerService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public void associateUserName() {
-        log.info("usercache location: " + usercache_dir);
-        log.info("stats location: " + usercache_dir);
-
-        try {
-            JsonNode players_array = mapper.readTree(new File(usercache_dir));
-            System.out.println(players_array.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public Map<String, Integer> getTimePlayed() {
+        log.info("usercache directory: " + usercache_dir);
+        log.info("user-stats directory: " + stats_dir);
         Map<String, Integer> uuidAndTime = new HashMap<String, Integer>();
-        Map<String, String> usernameAndTime = new HashMap<String, String>();
+        Map<String, Integer> usernameAndTime = new HashMap<String, Integer>();
 
         File[] statsFiles = new File(stats_dir).listFiles();
         for (int i = 0; i < statsFiles.length; i++) {
@@ -49,7 +40,7 @@ public class PlayerService {
                         .get("minecraft:play_one_minute")
                         .toString();
                 int timePlayed = Integer.parseInt(timePlayedAsString) / 72000;
-                String uuid = currentFile.getName().substring(0, 35);
+                String uuid = currentFile.getName().substring(0, 36);
                 uuidAndTime.put(uuid, timePlayed);
 
             } catch (IOException e) {
@@ -58,18 +49,23 @@ public class PlayerService {
         }
 
         JsonNode playerList;
-        Map<String, String> uuidAndUsername = new HashMap<String, String>();
+
         try {
             playerList = mapper.readTree(new File(usercache_dir));
             for (int i = 0; i < playerList.size(); i++) {
-                uuidAndUsername.put(playerList.get(i).get("uuid").toString(), playerList.get(i).get("name").toString());
+                String uuidKey = playerList.get(i).get("uuid").asText();
+                int time = 0;
+                if (uuidAndTime.get(uuidKey) != null) {
+                    time = uuidAndTime.get(uuidKey);
+                }
+                usernameAndTime.put(playerList.get(i).get("name").asText(), time);
+                log.info("Found user: " + playerList.get(i).get("name").asText());
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        //uuidAndUsername.merge(key, value, mergeBiFunction); -- Figure this shit out????
-        return uuidAndTime;
+        
+        return usernameAndTime;
     }
 
 }

@@ -1,5 +1,7 @@
 package betterkraftstats.backend;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +19,8 @@ public class PlayerStatsController {
     PlayerService playerService;
     
     @GetMapping("/playtime")
-    public void getPlaytime() {
+    public Map<String, Integer> getPlaytime() {
         //playerService.associateUserName();
-        playerService.getTimePlayed();
+        return playerService.getTimePlayed();
     }
 }
